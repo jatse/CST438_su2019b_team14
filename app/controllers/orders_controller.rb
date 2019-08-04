@@ -35,7 +35,8 @@ class OrdersController < ApplicationController
         
         #return empty array if no orders found
         if orders.nil?
-            return Array.new
+            render(json: Array.new, status: 200)
+        #otherwise convert orders to hash and return status 200 OK
         else
             ordersArray = to_hash(orders)
             render(json: ordersArray, status: 200)
