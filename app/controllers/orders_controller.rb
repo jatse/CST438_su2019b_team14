@@ -20,7 +20,7 @@ class OrdersController < ApplicationController
     def index
         #if customer email is submitted, find customerId
         if params.has_key?(:email)
-            customer = HTTParty.get('http://localhost:8081/customers', query: {email: params['email']})
+            customer = customer_from_email(params['email'])
             #read orders if valid customer found
             if customer != nil
                 orders = Order.where(:customerId => customer[:id])
@@ -72,6 +72,14 @@ class OrdersController < ApplicationController
             end
             
             return orderArray
+        end
+        
+        #=======================================================================
+        #Input: Customer email address
+        #Makes API call to customer database, returns hash of customer object
+        #=======================================================================
+        def customer_from_email(email)
+            HTTParty.get('http://localhost:8081/customers', query: {email: email})
         end
     
 end
