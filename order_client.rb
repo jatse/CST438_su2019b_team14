@@ -64,18 +64,27 @@ while choice != '7' do
             Connection.target_orders_api
             
             #get search paramter type
-            puts "retrieve by customer's id or email?"
+            puts "retrieve by:"
+            puts "1 - order id"
+            puts "2 - customer email"
+            puts "3 - customer id"
             userInput = gets.chomp!
             
-            if userInput == "email"
+            if userInput == "1"
                 #get email to search
-                puts "enter email"
+                puts "enter order id"
+                userInput = gets.chomp!
+                #print response object from request
+                outputResponse(Connection.get('/orders/#{userInput}'))
+            elsif userInput == "2"
+                #get email to search
+                puts "enter customer email"
                 userInput = gets.chomp!
                 #print response object from request
                 outputResponse(Connection.get('/orders', query: {email: userInput}))
-            elsif userInput == "id"
+            elsif userInput == "3"
                 #get id to search
-                puts "enter id"
+                puts "enter customer id"
                 userInput = gets.chomp!
                 #print response object from request
                 outputResponse(Connection.get('/orders', query: {customerId: userInput}))
@@ -104,18 +113,20 @@ while choice != '7' do
             Connection.target_customers_api
             
             #get search paramter type
-            puts "lookup by customer's id or email?"
+            puts "lookup by:"
+            puts "1 - customer email"
+            puts "2 - customer id"
             userInput = gets.chomp!
             
-            if userInput == "email"
+            if userInput == "1"
                 #get email to search
-                puts "enter email"
+                puts "enter customer email"
                 userInput = gets.chomp!
                 #print response object from request
                 outputResponse(Connection.get('/customers', query: {email: userInput}))
-            elsif userInput == "id"
+            elsif userInput == "2"
                 #get id to search
-                puts "enter id"
+                puts "enter customer id"
                 userInput = gets.chomp!
                 #print response object from request
                 outputResponse(Connection.get('/customers', query: {id: userInput}))
