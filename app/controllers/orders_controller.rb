@@ -4,6 +4,42 @@ class OrdersController < ApplicationController
     #POST /orders
     #===========================================================================
     def create
+        # checks to see if it has an email address
+        if params.has_key?(:email)
+            customer = customer_from_email(params['email'])
+            #receive customer information from customer API
+            if customer != nil
+                if params.has_key?(:itemId)
+                    item = item_from_id(params['itemId'])
+                    #receive item information from item API
+                    if item != nil
+                        # calculates the total from the price and award values
+                        calculate_total = item[:price] - customer[:award]
+                        # creates entry for new order based off of the information
+                        # from the item and customer APIs
+                        newOrder = Order.new(itemId: item[:id], 
+                        description: item[:description], 
+                        customerId: customer[:id], price: item[:price], 
+                        award: customer[:award], total: calculate_total)
+                        # if the values in the order are correct the value is 
+                        # saved into the database, otherwise an error is returned
+                        if newOrder.save
+                            render(json: newOrder, status: 201)
+                        else
+                            render(json: newOrder.errors, status: 400)
+                        end
+                    else
+                        head :bad_request
+                    end
+                else
+                    head :bad_request
+                end
+            else
+                head :bad_request
+            end
+        else
+            head :bad_request
+        end
     end
     
     #===========================================================================
@@ -11,6 +47,19 @@ class OrdersController < ApplicationController
     #GET /orders/:id
     #===========================================================================
     def show
+        # if the id is submitted, find order by id
+        if params.has_key?(:id)
+            order = Order.find_by(id: params[:id])
+            # if the order is found in the database then the data of the order
+            # is returned, otherwise it returns a 404 error
+            if order != nil
+                render(json: order, status: 200 )
+            else
+                head :not_found
+            end
+        else
+            head :not_found
+        end
     end
     
     #===========================================================================
@@ -81,5 +130,8 @@ class OrdersController < ApplicationController
         def customer_from_email(email)
             HTTParty.get('http://localhost:8081/customers', query: {email: email})
         end
-    
+        
+        def item_from_id(id)
+            HTTParty.get('http://localhost:8082/items', query: {id: id}) 
+        end
 end
