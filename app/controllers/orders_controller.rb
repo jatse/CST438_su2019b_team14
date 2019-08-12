@@ -12,9 +12,13 @@ class OrdersController < ApplicationController
                 if params.has_key?(:itemId)
                     item = item_from_id(params['itemId'])
                     #receive item information from item API
-                    if item != nil
+                    if item != nil 
                         # calculates the total from the price and award values
                         calculate_total = item[:price] - customer[:award]
+                        # if calculate_total is less than 0 set calculate_total to 0
+                        if calculate_total < 0
+                            calculate_total = 0.0
+                        end
                         # creates entry for new order based off of the information
                         # from the item and customer APIs
                         newOrder = Order.new(itemId: item[:id], 
@@ -23,7 +27,11 @@ class OrdersController < ApplicationController
                         award: customer[:award], total: calculate_total)
                         # if the values in the order are correct the value is 
                         # saved into the database, otherwise an error is returned
-                        if newOrder.save
+                        # send order to item and customer API to process, save the responce from the item and customer API
+                        item_update_response = item_update(newOrder)
+                        customer_update_response = customer_update(newOrder)
+                        # If the newOrder can save to the order database and the item and customer API return successful codes then process the order, otherwise return error
+                        if newOrder.save && item_update_response.code == 204 && customer_update_response.code == 204
                             render(json: newOrder, status: 201)
                         else
                             render(json: newOrder.errors, status: 400)
@@ -131,7 +139,29 @@ class OrdersController < ApplicationController
             HTTParty.get('http://localhost:8081/customers', query: {email: email})
         end
         
+        #=======================================================================
+        #Input: item id number
+        #Makes API call to item database, returns hash of item object
+        #=======================================================================
         def item_from_id(id)
             HTTParty.get('http://localhost:8082/items', query: {id: id}) 
+        end
+        
+        #=======================================================================
+        #Input: order hash
+        #Makes API call to item database, returns http response from the items
+        #controller
+        #=======================================================================
+        def item_update(order)
+            HTTParty.put("http://localhost:8082/items/order", :body => order.to_json)
+        end
+        
+        #=======================================================================
+        #Input: order hash
+        #Makes API call to customer database, returns http response from the 
+        #customers controller
+        #=======================================================================
+        def customer_update(order)
+            HTTParty.put("http://localhost:8081/customers/order", :body => order.to_json)
         end
 end
