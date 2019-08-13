@@ -8,7 +8,7 @@ class OrdersController < ApplicationController
         if params.has_key?(:email)
             customer = customer_from_email(params['email'])
             #receive customer information from customer API
-            if customer != nil && customer["id"] != 0
+            if customer != nil && customer["id"] != nil
                 if params.has_key?(:itemId)
                     item = item_from_id(params['itemId'])
                     #receive item information from item API
