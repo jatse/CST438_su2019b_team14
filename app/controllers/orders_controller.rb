@@ -33,7 +33,7 @@ class OrdersController < ApplicationController
                         # send order to item and customer API to process, save the responce from the item and customer API
                         
                         # If the newOrder can save to the order database and the item and customer API return successful codes then process the order, otherwise return error
-                        if newOrder.save && item["stock"].to_i > 0
+                        if item["stock"].to_i > 0 && newOrder.save
                             item_update(order_hash(newOrder))
                             customer_update(order_hash(newOrder))
                             render(json: newOrder, status: 201)
