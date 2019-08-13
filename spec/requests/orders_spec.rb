@@ -167,9 +167,16 @@ RSpec.describe 'Orders' do
         end
         
         it "Failed to create a new order because of an invalid email" do
+            #create item double
+            item = double
+            allow(item).to receive(:[]).with("id").and_return("1")
+            allow(item).to receive(:[]).with("description").and_return("Gold Ring")
+            allow(item).to receive(:[]).with("price").and_return("199.99")
+            allow(item).to receive(:[]).with("stock").and_return("10")
+            
             allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return(nil)
             #stub for method for calling to item API, returns simple item
-            allow_any_instance_of(OrdersController).to receive(:item_from_id).and_return({:id => 1, :description => "Gold Ring", :price => 199.99})
+            allow_any_instance_of(OrdersController).to receive(:item_from_id).and_return(item)
             update_response = double
             allow(update_response).to receive(:code).and_return(204)
             allow_any_instance_of(OrdersController).to receive(:customer_update).and_return(update_response)
@@ -181,7 +188,12 @@ RSpec.describe 'Orders' do
         end
         
         it "Failed to create a new order because of an invalid itemId" do
-            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return({:id => 1, :award => 0.0})
+            #create customer double
+            customer = double
+            allow(customer).to receive(:[]).with("id").and_return("1")
+            allow(customer).to receive(:[]).with("award").and_return("0.0")
+            
+            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return(customer)
             allow_any_instance_of(OrdersController).to receive(:item_from_id).and_return(nil)
             update_response = double
             allow(update_response).to receive(:code).and_return(204)
@@ -199,23 +211,46 @@ RSpec.describe 'Orders' do
         end
         
         it "Failed to create a new order due to lack of itemId" do
-            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return({:id => 1, :award => 0.0})
+            #create customer double
+            customer = double
+            allow(customer).to receive(:[]).with("id").and_return("1")
+            allow(customer).to receive(:[]).with("award").and_return("0.0")
+            
+            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return(customer)
             new_order = {email: '123@123.com'}
             post '/orders', params: new_order.to_json, headers: headers
             expect(response).to have_http_status(400)
         end
         
         it "Failed to create a new order due to lack of data from customer API" do
-            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return({:id => 1})
-            allow_any_instance_of(OrdersController).to receive(:item_from_id).and_return({:id => 1, :description => "Gold Ring", :price => 199.99})
+            #create customer double
+            customer = double
+            allow(customer).to receive(:[]).with("id").and_return("1")
+            #create item double
+            item = double
+            allow(item).to receive(:[]).with("id").and_return("1")
+            allow(item).to receive(:[]).with("description").and_return("Gold Ring")
+            allow(item).to receive(:[]).with("price").and_return("199.99")
+            allow(item).to receive(:[]).with("stock").and_return("10")
+            
+            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return(customer)
+            allow_any_instance_of(OrdersController).to receive(:item_from_id).and_return(item)
             new_order = {email: '123@123.com'}
             post '/orders', params: new_order.to_json, headers: headers
             expect(response).to have_http_status(400)
         end
         
         it "Failed to create a new order due to lack of data from item API" do
-            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return({:id => 1, :award => 0.0})
-            allow_any_instance_of(OrdersController).to receive(:item_from_id).and_return({:id => 1})
+            #create customer double
+            customer = double
+            allow(customer).to receive(:[]).with("id").and_return("1")
+            allow(customer).to receive(:[]).with("award").and_return("0.0")
+            #create item double
+            item = double
+            allow(item).to receive(:[]).with("id").and_return("1")
+            
+            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return(customer)
+            allow_any_instance_of(OrdersController).to receive(:item_from_id).and_return(item)
             new_order = {email: '123@123.com'}
             post '/orders', params: new_order.to_json, headers: headers
             expect(response).to have_http_status(400)

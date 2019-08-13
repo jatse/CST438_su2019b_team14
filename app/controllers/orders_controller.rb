@@ -14,7 +14,7 @@ class OrdersController < ApplicationController
                     #receive item information from item API
                     if item != nil 
                         # calculates the total from the price and award values
-                        calculate_total = (BigDecimal.new(item["price"]) - BigDecimal.new(customer["award"]))
+                        calculate_total = (BigDecimal(item["price"]) - BigDecimal(customer["award"]))
                         # if calculate_total is less than 0 set calculate_total to 0
                         if calculate_total < 0
                             calculate_total = 0.0
