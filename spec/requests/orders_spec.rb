@@ -54,8 +54,10 @@ RSpec.describe 'Orders' do
         end
         
         it "Reads multiple orders with valid email" do
-            #stub of method for calling to customer API, returns simple customer with id field only
-            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return({:id => 1})
+            #create customer double, let API call return double, let double return id hash value 
+            customer = double
+            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return(customer)
+            allow(customer).to receive(:[]).with("id").and_return("1")
             get '/orders?email=fakeuser@domain.com', headers:headers
             json_response = JSON.parse(response.body)
             expect(json_response.length).to eq 2
@@ -76,7 +78,9 @@ RSpec.describe 'Orders' do
         end
         
         it "Reads single order with valid email" do
-            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return({:id => 2})
+            customer = double
+            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return(customer)
+            allow(customer).to receive(:[]).with("id").and_return("2")
             get '/orders?email=fakeuser@domain.com', headers:headers
             json_response = JSON.parse(response.body)
             expect(json_response.length).to eq 1
@@ -90,7 +94,9 @@ RSpec.describe 'Orders' do
         end
         
         it "Returns empty array for valid email but no orders" do
-            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return({:id => 999})
+            customer = double
+            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return(customer)
+            allow(customer).to receive(:[]).with("id").and_return("999")
             get '/orders?email=fakeuser@domain.com', headers:headers
             json_response = JSON.parse(response.body)
             expect(json_response.length).to eq 0
@@ -127,10 +133,21 @@ RSpec.describe 'Orders' do
     
     describe 'POST /orders' do
         it "Creates new order given customer and itemId" do
+            #create customer double
+            customer = double
+            allow(customer).to receive(:[]).with("id").and_return("1")
+            allow(customer).to receive(:[]).with("award").and_return("0.0")
+            #create item double
+            item = double
+            allow(item).to receive(:[]).with("id").and_return("1")
+            allow(item).to receive(:[]).with("description").and_return("Gold Ring")
+            allow(item).to receive(:[]).with("price").and_return("199.99")
+            allow(item).to receive(:[]).with("stock").and_return("10")
+            
             #stub for method for calling to customer API, returns simple customer 
-            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return({:id => 1, :award => 0.0})
+            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return(customer)
             #stub for method for calling to item API, returns simple item
-            allow_any_instance_of(OrdersController).to receive(:item_from_id).and_return({:id => 1, :description => "Gold Ring", :price => 199.99})
+            allow_any_instance_of(OrdersController).to receive(:item_from_id).and_return(item)
             # stub to simulate return codes from the customer and item APIs
             update_response = double
             allow(update_response).to receive(:code).and_return(204)
@@ -205,8 +222,19 @@ RSpec.describe 'Orders' do
         end   
         
         it "Failed to create a new order due to item stock equal to zero or the item is unable to save to the database" do
-            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return({:id => 1, :award => 0.0})
-            allow_any_instance_of(OrdersController).to receive(:item_from_id).and_return({:id => 1, :description => "Gold Ring", :price => 199.99})
+            #create customer double
+            customer = double
+            allow(customer).to receive(:[]).with("id").and_return("1")
+            allow(customer).to receive(:[]).with("award").and_return("0.0")
+            #create item double
+            item = double
+            allow(item).to receive(:[]).with("id").and_return("1")
+            allow(item).to receive(:[]).with("description").and_return("Gold Ring")
+            allow(item).to receive(:[]).with("price").and_return("199.99")
+            allow(item).to receive(:[]).with("stock").and_return("0")
+            
+            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return(customer)
+            allow_any_instance_of(OrdersController).to receive(:item_from_id).and_return(item)
             update_response = double
             allow(update_response).to receive(:code).and_return(204)
             item_response = double
@@ -219,8 +247,19 @@ RSpec.describe 'Orders' do
         end
         
         it "Failed to craete a new order due to customer unable to save to database" do
-            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return({:id => 1, :award => 0.0})
-            allow_any_instance_of(OrdersController).to receive(:item_from_id).and_return({:id => 1, :description => "Gold Ring", :price => 199.99})
+            #create customer double
+            customer = double
+            allow(customer).to receive(:[]).with("id").and_return("1")
+            allow(customer).to receive(:[]).with("award").and_return("0.0")
+            #create item double
+            item = double
+            allow(item).to receive(:[]).with("id").and_return("1")
+            allow(item).to receive(:[]).with("description").and_return("Gold Ring")
+            allow(item).to receive(:[]).with("price").and_return("199.99")
+            allow(item).to receive(:[]).with("stock").and_return("10")
+            
+            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return(customer)
+            allow_any_instance_of(OrdersController).to receive(:item_from_id).and_return(item)
             update_response = double
             allow(update_response).to receive(:code).and_return(204)
             customer_response = double
