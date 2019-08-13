@@ -54,6 +54,14 @@ while choice != '7' do
             #set connection to orders API
             Connection.target_orders_api
             
+            #get new order information
+            puts "Enter item id"
+            item_id = gets.chomp!
+            puts "Enter customer email"
+            customer_email = gets.chomp!
+            obj = {itemId: item_id, email: customer_email}
+            outputResponse(Connection.post('/orders', :body => obj.to_json))
+            
             
             
         #=======================================================================
