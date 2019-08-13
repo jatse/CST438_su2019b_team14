@@ -14,25 +14,28 @@ class OrdersController < ApplicationController
                     #receive item information from item API
                     if item != nil 
                         # calculates the total from the price and award values
-                        calculate_total = (BigDecimal(item["price"]) - BigDecimal(customer["award"]))
+                        calculate_total = (item["price"].to_f - customer["award"].to_f)
                         # if calculate_total is less than 0 set calculate_total to 0
                         if calculate_total < 0
                             calculate_total = 0.0
                         end
                         # creates entry for new order based off of the information
                         # from the item and customer APIs
-                        newOrder = Order.new(itemId: item["id"].to_i, 
-                        description: item["description"], 
-                        customerId: customer["id"].to_i, price: BigDecimal(item["price"]), 
-                        award: BigDecimal(customer["award"]), total: calculate_total)
+                        newOrder = Order.new(
+                            itemId: item["id"].to_i, 
+                            description: item["description"], 
+                            customerId: customer["id"].to_i, 
+                            price: item["price"].to_f, 
+                            award: customer["award"].to_f, 
+                            total: calculate_total)
                         # if the values in the order are correct the value is 
                         # saved into the database, otherwise an error is returned
                         # send order to item and customer API to process, save the responce from the item and customer API
                         
                         # If the newOrder can save to the order database and the item and customer API return successful codes then process the order, otherwise return error
                         if newOrder.save && item["stock"].to_i > 0
-                            item_update(newOrder)
-                            customer_update(newOrder)
+                            item_update(order_hash(newOrder))
+                            customer_update(order_hash(newOrder))
                             render(json: newOrder, status: 201)
                         else
                             if item["stock"].to_i <= 0
@@ -119,17 +122,7 @@ class OrdersController < ApplicationController
             #iterate through all orders
             orders.each do |order|
                 #convert object to hash
-                orderhash = {
-                    :id => order.id,
-                    :itemId => order.itemId, 
-                    :description => order.description, 
-                    :customerId => order.customerId,
-                    :price => order.price,
-                    :award => order.award,
-                    :total => order.total,
-                    :created_at => order.created_at,
-                    :updated_at => order.updated_at
-                }
+                orderhash = order_hash(order)
                 #append to array of orders
                 orderArray << orderhash
             end
@@ -159,7 +152,7 @@ class OrdersController < ApplicationController
         #controller
         #=======================================================================
         def item_update(order)
-            HTTParty.put("http://localhost:8082/items/order", :body => order.to_json)
+            HTTParty.put("http://localhost:8082/items/order", :body => order)
         end
         
         #=======================================================================
@@ -168,6 +161,24 @@ class OrdersController < ApplicationController
         #customers controller
         #=======================================================================
         def customer_update(order)
-            HTTParty.put("http://localhost:8081/customers/order", :body => order.to_json)
+            HTTParty.put("http://localhost:8081/customers/order", :body => order)
+        end
+        
+        #=======================================================================
+        #Input: Single order
+        #Convert order object to hash
+        #=======================================================================
+        def order_hash(order)
+            return {
+                :id => order.id,
+                :itemId => order.itemId, 
+                :description => order.description, 
+                :customerId => order.customerId,
+                :price => order.price,
+                :award => order.award,
+                :total => order.total,
+                :created_at => order.created_at,
+                :updated_at => order.updated_at
+            }
         end
 end
