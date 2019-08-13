@@ -14,26 +14,32 @@ class OrdersController < ApplicationController
                     #receive item information from item API
                     if item != nil 
                         # calculates the total from the price and award values
-                        calculate_total = item[:price] - customer[:award]
+                        calculate_total = (BigDecimal.new(item["price"]) - BigDecimal.new(customer["award"]))
                         # if calculate_total is less than 0 set calculate_total to 0
                         if calculate_total < 0
                             calculate_total = 0.0
                         end
                         # creates entry for new order based off of the information
                         # from the item and customer APIs
-                        newOrder = Order.new(itemId: item[:id], 
-                        description: item[:description], 
-                        customerId: customer[:id], price: item[:price], 
-                        award: customer[:award], total: calculate_total)
+                        newOrder = Order.new(itemId: item["id"].to_i, 
+                        description: item["description"], 
+                        customerId: customer["id"].to_i, price: BigDecimal(item["price"]), 
+                        award: BigDecimal(customer["award"]), total: calculate_total)
                         # if the values in the order are correct the value is 
                         # saved into the database, otherwise an error is returned
                         # send order to item and customer API to process, save the responce from the item and customer API
-                        item_update_response = item_update(newOrder)
-                        customer_update_response = customer_update(newOrder)
+                        
                         # If the newOrder can save to the order database and the item and customer API return successful codes then process the order, otherwise return error
-                        if newOrder.save && item_update_response.code == 204 && customer_update_response.code == 204
+                        if newOrder.save && item["stock"].to_i > 0
+                            item_update(newOrder)
+                            customer_update(newOrder)
                             render(json: newOrder, status: 201)
                         else
+                            if item["stock"].to_i <= 0
+                                item_response = item_update(newOrder)
+                                render(json: item_response, status: 400)
+                                return
+                            end
                             render(json: newOrder.errors, status: 400)
                         end
                     else
@@ -80,7 +86,7 @@ class OrdersController < ApplicationController
             customer = customer_from_email(params['email'])
             #read orders if valid customer found
             if customer != nil
-                orders = Order.where(:customerId => customer[:id])
+                orders = Order.where(:customerId => customer['id'].to_i)
             else
                 orders = nil
             end
