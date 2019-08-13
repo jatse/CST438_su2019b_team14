@@ -8,7 +8,8 @@ class OrdersController < ApplicationController
         if params.has_key?(:email)
             customer = customer_from_email(params['email'])
             #receive customer information from customer API
-            if customer != nil
+            if customer.code == 200
+                puts customer
                 if params.has_key?(:itemId)
                     item = item_from_id(params['itemId'])
                     #receive item information from item API
@@ -38,11 +39,6 @@ class OrdersController < ApplicationController
                             customer_update(order_hash(newOrder))
                             render(json: newOrder, status: 201)
                         else
-                            if item["stock"].to_i <= 0
-                                item_response = item_update(newOrder)
-                                render(json: item_response, status: 400)
-                                return
-                            end
                             render(json: newOrder.errors, status: 400)
                         end
                     else
