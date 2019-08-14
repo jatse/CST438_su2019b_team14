@@ -280,31 +280,6 @@ RSpec.describe 'Orders' do
             post '/orders', params: new_order.to_json, headers: headers
             expect(response).to have_http_status(400)
         end
-        
-        it "Failed to craete a new order due to customer unable to save to database" do
-            #create customer double
-            customer = double
-            allow(customer).to receive(:[]).with("id").and_return("1")
-            allow(customer).to receive(:[]).with("award").and_return("0.0")
-            #create item double
-            item = double
-            allow(item).to receive(:[]).with("id").and_return("1")
-            allow(item).to receive(:[]).with("description").and_return("Gold Ring")
-            allow(item).to receive(:[]).with("price").and_return("199.99")
-            allow(item).to receive(:[]).with("stock").and_return("10")
-            
-            allow_any_instance_of(OrdersController).to receive(:customer_from_email).and_return(customer)
-            allow_any_instance_of(OrdersController).to receive(:item_from_id).and_return(item)
-            update_response = double
-            allow(update_response).to receive(:code).and_return(204)
-            customer_response = double
-            allow(customer_response).to receive(:code).and_return(400)
-            allow_any_instance_of(OrdersController).to receive(:customer_update).and_return(customer_response)
-            allow_any_instance_of(OrdersController).to receive(:item_update).and_return(update_response)
-            new_order = {email: '123@123.com', itemId: 1}
-            post '/orders', params: new_order.to_json, headers: headers
-            expect(response).to have_http_status(400)
-        end
     end
     
 end
